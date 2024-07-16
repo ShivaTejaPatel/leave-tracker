@@ -25,6 +25,7 @@ import com.example.demo.service.UserService;
 
 @RestController
 @RequestMapping("/api/auth")
+
 public class AuthenticationController {
     
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationController.class);
