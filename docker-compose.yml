@@ -3,6 +3,8 @@ version: '3.8'
 services:
   app:
     build: .
+    platforms:
+      - linux/amd64
     ports:
       - "8005:8005"
     environment:
@@ -13,6 +15,8 @@ services:
       - db
 
   db:
+    platforms:
+      - linux/amd64
     image: mysql:8.0
     environment:
       - MYSQL_ROOT_PASSWORD=Shiva@12
