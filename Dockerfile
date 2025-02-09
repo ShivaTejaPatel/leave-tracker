@@ -2,9 +2,8 @@ FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-COPY target/demo-0.0.1-SNAPSHOT.jar app.jar
-COPY src/main/resources/application.properties application.properties
+COPY target/leave-tracker-0.0.1.jar leave-tracker-0.0.1.jar
 
 EXPOSE 8005
 
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "leave-tracker-0.0.1.jar"]
