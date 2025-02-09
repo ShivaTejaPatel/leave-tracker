@@ -2,7 +2,6 @@ stages:
   - maven-build
   - docker-build
   - docker-push
-image: maven:latest
 cache:
   paths:
     - .m2/repository
@@ -11,6 +10,8 @@ maven-build:
   stage: maven-build
   tags: 
     - local
+  before_script:
+    - image: maven:latest
   script:
     - mvn clean package -B -DskipTests
   artifacts:
