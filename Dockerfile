@@ -8,7 +8,7 @@
 
 
 # Build stage
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM eclipse-temurin:17.0.14_7-jdk-ubi9-minimal AS builder
 WORKDIR /build
 COPY target/leave-tracker-0.0.1.jar app.jar
 # Extract layers
