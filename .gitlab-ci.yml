@@ -9,6 +9,7 @@ cache:
 
 maven-build:
   stage: maven-build
+  image: maven:latest
   script:
     - mvn clean package -B -DskipTests
   artifacts:
