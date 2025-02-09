@@ -8,8 +8,6 @@ cache:
 
 maven-build:
   stage: maven-build
-  tags: 
-    - local
   image: maven:latest
   script:
     - mvn clean package -B -DskipTests
