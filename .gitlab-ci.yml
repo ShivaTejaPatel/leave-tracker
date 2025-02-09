@@ -19,6 +19,7 @@ maven-build:
 
 docker-build:
   stage: docker-build
+  tags: local
   before_script:
     - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
   script:
@@ -29,6 +30,7 @@ docker-build:
 
 docker-push:
   stage: docker-push
+  tags: local
   before_script:
     - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
   script:
