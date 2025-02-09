@@ -9,7 +9,8 @@ cache:
 
 maven-build:
   stage: maven-build
-  tags: local
+  tags: 
+    - local
   image: maven:latest
   script:
     - mvn clean package -B -DskipTests
@@ -20,7 +21,8 @@ maven-build:
 
 docker-build:
   stage: docker-build
-  tags: local
+  tags: 
+    - local
   before_script:
     - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
   script:
@@ -31,7 +33,8 @@ docker-build:
 
 docker-push:
   stage: docker-push
-  tags: local
+  tags: 
+    - local
   before_script:
     - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
   script:
