@@ -10,8 +10,7 @@ maven-build:
   stage: maven-build
   tags: 
     - local
-  before_script:
-    - image: maven:latest
+  image: maven:latest
   script:
     - mvn clean package -B -DskipTests
   artifacts:
