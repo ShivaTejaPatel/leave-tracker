@@ -27,8 +27,5 @@ COPY --from=builder /build/application/ ./
 # Configure JVM options
 #ENV JAVA_OPTS="-Xms512m -Xmx512m -XX:+UseG1GC"
 
-# Run with non-root user for security
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
 
 ENTRYPOINT ["java", "org.springframework.boot.loader.JarLauncher"]
