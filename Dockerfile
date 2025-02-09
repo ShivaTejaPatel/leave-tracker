@@ -15,7 +15,7 @@ COPY target/leave-tracker-0.0.1.jar app.jar
 RUN java -Djarmode=layertools -jar app.jar extract
 
 # Run stage
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17.0.14_7-jre-ubi9-minimal
 WORKDIR /app
 
 # Copy layers from builder
