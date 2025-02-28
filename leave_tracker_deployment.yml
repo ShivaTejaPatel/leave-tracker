@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: leave-tracker
+  labels:
+    app: leave-tracker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: leave-tracker
+  template:
+    metadata:
+      labels:
+        app: leave-tracker
+    spec:
+      containers:
+      - name: leave-tracker
+        image: shivatejanam854/leave_tracker:latest
+        ports:
+        - containerPort: 8005
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: leave-tracker-service
+  labels:
+    app: leave-tracker
+spec:
+  selector:
+    app: leave-tracker
+  ports:
+  - port: 8005
+    targetPort: 8005
+  type: NodePort
