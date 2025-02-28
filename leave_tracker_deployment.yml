@@ -19,6 +19,9 @@ spec:
         image: shivatejanam854/leave_tracker:latest
         ports:
         - containerPort: 8005
+        envFrom:
+        - configMapRef:
+            name: leave-tracker-config
         resources:
           limits:
             cpu: "500m"
