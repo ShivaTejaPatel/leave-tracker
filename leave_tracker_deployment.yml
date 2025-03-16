@@ -41,6 +41,7 @@ spec:
   selector:
     app: leave-tracker
   ports:
-  - port: 8005
+  - name: http
+    port: 8005
     targetPort: 8005
 
