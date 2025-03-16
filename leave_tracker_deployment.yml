@@ -17,6 +17,7 @@ spec:
       containers:
       - name: leave-tracker
         image: shivatejanam854/leave_tracker:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8005
         envFrom:
@@ -42,4 +43,4 @@ spec:
   ports:
   - port: 8005
     targetPort: 8005
-  type: NodePort
+
