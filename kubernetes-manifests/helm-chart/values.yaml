@@ -5,7 +5,7 @@ replicaCount: 1
 image:
   repository: shivatejanam854/leave_tracker
   pullPolicy: Always
-  tag: "63f0a4fc"
+  tag: "01defaa3"
 imagePullSecrets: []
 service:
   name: leave-tracker-svc
