@@ -4,23 +4,21 @@ A comprehensive enterprise-grade Leave Management System built with Spring Boot,
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Project Overview](#project-overview)
 - [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
 - [API Documentation](#api-documentation)
 - [JWT Authentication](#jwt-authentication)
 - [Dockerfile](#dockerfile)
 - [CI/CD Pipeline](#cicd-pipeline)
 - [Helm Chart](#helm-chart)
 - [ArgoCD Integration](#argocd-integration)
-- [Local Development](#local-development)
 - [Deployment](#deployment)
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
 The Leave Management System is a RESTful web application that enables organizations to manage employee leave requests efficiently. The system provides separate workflows for employees and managers, ensuring proper authorization and approval processes.
 
@@ -30,7 +28,7 @@ The Leave Management System is a RESTful web application that enables organizati
 - **JWT Authentication**: Secure token-based authentication for all protected endpoints
 - **Leave Application Workflow**: Employees can apply for leave, managers can approve/reject requests
 - **Status Tracking**: Real-time tracking of leave application status (PENDING, APPROVED, REJECTED)
-- **Health Monitoring**: Kubernetes health probes and Prometheus metrics integration
+- **Health Monitoring**: Kubernetes health probes integration
 - **Auto-Scaling**: Horizontal Pod Autoscaler (HPA) for dynamic resource scaling
 - **GitOps Deployment**: Automated deployment using ArgoCD with Helm charts
 
@@ -41,7 +39,7 @@ The Leave Management System is a RESTful web application that enables organizati
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Backend
 - **Framework**: Spring Boot 3.3.13
@@ -63,57 +61,11 @@ The Leave Management System is a RESTful web application that enables organizati
 - **GitOps**: ArgoCD
 
 ### Monitoring & Observability
-- **Metrics**: Prometheus (Micrometer)
 - **Health Checks**: Spring Boot Actuator
 
 ---
 
-## 🏗 Architecture
-
-```
-┌─────────────┐
-│   Client    │
-│  (Browser)  │
-└──────┬──────┘
-       │ HTTPS
-       ▼
-┌─────────────────────────────────┐
-│   Kubernetes Service (ClusterIP)│
-│      leave-tracker-svc:8005     │
-└──────────────┬──────────────────┘
-               │
-               ▼
-┌─────────────────────────────────┐
-│   Spring Boot Application       │
-│   (Port: 8005)                  │
-│   ┌──────────────────────────┐  │
-│   │  JWT Authentication      │  │
-│   │  Spring Security         │  │
-│   └──────────────────────────┘  │
-│   ┌──────────────────────────┐  │
-│   │  REST Controllers        │  │
-│   │  - Authentication        │  │
-│   │  - Employee              │  │
-│   │  - Manager               │  │
-│   └──────────────────────────┘  │
-│   ┌──────────────────────────┐  │
-│   │  Service Layer           │  │
-│   └──────────────────────────┘  │
-│   ┌──────────────────────────┐  │
-│   │  JPA Repository          │  │
-│   └──────────────────────────┘  │
-└──────────────┬──────────────────┘
-               │ JDBC
-               ▼
-┌─────────────────────────────────┐
-│   MySQL Database                │
-│   (External/Cloud)              │
-└─────────────────────────────────┘
-```
-
----
-
-## 📡 API Documentation
+## API Documentation
 
 The application exposes RESTful APIs with three main controllers. All endpoints return a standardized `BackendResponse` format.
 
@@ -462,7 +414,7 @@ Public endpoints for health checks and testing.
 
 ---
 
-## 🔐 JWT Authentication
+## JWT Authentication
 
 ### How It Works
 
@@ -506,7 +458,7 @@ curl -X GET http://localhost:8005/lt/employee/1/leaves/1 \
 
 ---
 
-## 🐳 Dockerfile
+## Dockerfile
 
 The Dockerfile is optimized for security, size, and best practices.
 
@@ -559,7 +511,7 @@ docker run -p 8005:8005 \
 
 ---
 
-## 🔄 CI/CD Pipeline
+## CI/CD Pipeline
 
 The GitLab CI/CD pipeline automates the entire build, test, security scanning, and deployment process.
 
@@ -665,7 +617,7 @@ Required variables in GitLab Settings → CI/CD → Variables:
 
 ---
 
-## 📦 Helm Chart
+## Helm Chart
 
 The Helm chart provides a templated Kubernetes deployment for the Leave Management System.
 
@@ -788,7 +740,7 @@ kubectl get hpa -n leavetracking
 
 ---
 
-## 🚀 ArgoCD Integration
+## ArgoCD Integration
 
 ### What is ArgoCD?
 
@@ -883,82 +835,7 @@ spec:
 
 ---
 
-## 💻 Local Development
-
-### Prerequisites
-
-- Java 17 or higher
-- Maven 3.x
-- MySQL 8.0
-- Docker (optional, for containerized development)
-
-### Setup Steps
-
-1. **Clone Repository**:
-```bash
-git clone https://gitlab.com/leave-tracker1/leave-tracker.git
-cd leave-tracker
-```
-
-2. **Create Database**:
-```sql
-CREATE DATABASE `leave-tracker-db`;
-```
-
-3. **Update `application.properties`**:
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/leave-tracker-db
-spring.datasource.username=root
-spring.datasource.password=your-password
-```
-
-4. **Build and Run**:
-```bash
-mvn clean package
-java -jar target/leave-tracker.jar
-```
-
-5. **Access Application**:
-- Application: `http://localhost:8005/lt`
-- Swagger UI: `http://localhost:8005/lt/swagger-ui.html`
-- Health Check: `http://localhost:8005/lt/actuator/health`
-- Metrics: `http://localhost:8005/lt/actuator/prometheus`
-
-### Docker Compose (Alternative)
-
-Create a `docker-compose.yml` for local development:
-
-```yaml
-version: '3.8'
-services:
-  mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: leave-tracker-db
-    ports:
-      - "3306:3306"
-  
-  app:
-    build: .
-    ports:
-      - "8005:8005"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/leave-tracker-db
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: password
-    depends_on:
-      - mysql
-```
-
-Run with:
-```bash
-docker-compose up
-```
-
----
-
-## 🌐 Deployment
+## Deployment
 
 ### Minikube Deployment (Local)
 
@@ -1037,14 +914,7 @@ kubectl get all -n leavetracking
 
 ---
 
-## 📊 Monitoring & Health Checks
-
-### Prometheus Metrics
-
-The application exposes Prometheus metrics at:
-```
-http://localhost:8005/lt/actuator/prometheus
-```
+## Monitoring & Health Checks
 
 ### Health Endpoints
 
@@ -1068,7 +938,7 @@ http://localhost:8005/lt/actuator/prometheus
 
 ---
 
-## 🔒 Security Features
+## Security Features
 
 1. **JWT Authentication**: Secure token-based authentication
 2. **Role-Based Access Control**: Employees and Managers have separate permissions
@@ -1079,7 +949,7 @@ http://localhost:8005/lt/actuator/prometheus
 
 ---
 
-## 📝 Project Structure
+## Project Structure
 
 ```
 leave-tracker/
@@ -1113,28 +983,6 @@ leave-tracker/
 ├── pom.xml                          # Maven Configuration
 └── README.md                        # This file
 ```
-
----
-
-## 🤝 Contributing
-
-1. Create a feature branch from `dev`
-2. Make your changes
-3. Test locally
-4. Commit and push to `dev` branch
-5. CI/CD pipeline will automatically build and deploy
-
----
-
-## 📄 License
-
-This project is proprietary and confidential.
-
----
-
-## 👤 Author
-
-**Leave Tracker Team**
 
 ---
 
