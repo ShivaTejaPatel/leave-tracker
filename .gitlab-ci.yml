@@ -72,8 +72,7 @@ docker-build:
 
 trivy-scan:
   stage: trivy-scan
-  image: 
-    name: aquasec/trivy:canary
+  image: aquasec/trivy:canary
   dependencies:
     - docker-build
   needs:
