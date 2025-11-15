@@ -19,7 +19,7 @@ variables:
 
 maven-build:
   stage: maven-build
-  image: maven:l3-eclipse-temurin-17
+  image: maven:3-eclipse-temurin-17
   script:
     - mvn clean package -B -DskipTests
   artifacts:
