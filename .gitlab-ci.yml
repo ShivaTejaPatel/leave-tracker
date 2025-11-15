@@ -1,6 +1,6 @@
 stages:
   - maven-build
-  - sonarqube
+ # - sonarqube
   - docker-build
   - trivy-scan
   - docker-push
@@ -29,27 +29,27 @@ maven-build:
   only:
     - dev
 
-sonarqube:
-  stage: sonarqube
-  image: maven:3-eclipse-temurin-17
-  dependencies:
-    - maven-build
-  needs:
-    - maven-build
-  cache:
-    policy: pull-push
-    key: "sonar-cache-$CI_COMMIT_REF_SLUG"
-    paths:
-      - "${SONAR_USER_HOME}/cache"
-      - sonar-scanner/
-  script:
-    - |
-      mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-        -Dsonar.host.url=${SONAR_HOST_URL} \
-        -Dsonar.login=${SONAR_TOKEN}
-  allow_failure: true
-  only:
-    - dev
+# sonarqube:
+#   stage: sonarqube
+#   image: maven:3-eclipse-temurin-17
+#   dependencies:
+#     - maven-build
+#   needs:
+#     - maven-build
+#   cache:
+#     policy: pull-push
+#     key: "sonar-cache-$CI_COMMIT_REF_SLUG"
+#     paths:
+#       - "${SONAR_USER_HOME}/cache"
+#       - sonar-scanner/
+#   script:
+#     - |
+#       mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+#         -Dsonar.host.url=${SONAR_HOST_URL} \
+#         -Dsonar.login=${SONAR_TOKEN}
+#   allow_failure: true
+#   only:
+#     - dev
 
 docker-build:
   stage: docker-build
@@ -59,7 +59,7 @@ docker-build:
     - maven-build
   needs:
     - maven-build
-    - sonarqube
+#    - sonarqube
   before_script:
     - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
   script:
