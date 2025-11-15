@@ -140,32 +140,32 @@ docker-push:
 
 helm-update:
   stage: helm-update
-  image: alpine/git:latest
+  image:
+    name: alpine/git:latest
+    entrypoint: [""]
   dependencies: []
   needs:
     - docker-push
   before_script:
-    - apk add --no-cache yq curl jq
+    - apk add --no-cache yq git curl jq
     - git config --global user.email "gitlab-ci@example.com"
     - git config --global user.name "GitLab CI"
   script:
-    - echo "Updating Helm chart with new image tag ${DOCKER_TAG_COMMIT}"
     - git remote set-url origin "https://oauth2:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
     - yq eval ".image.tag = \"${DOCKER_TAG_COMMIT}\"" -i kubernetes-manifests/helm-chart/values.yaml
     - git add kubernetes-manifests/helm-chart/values.yaml
-    - git commit -m "chore update helm chart image tag to ${DOCKER_TAG_COMMIT} [skip ci]" || exit 0
-    - git push origin HEAD:${CI_COMMIT_REF_NAME} || exit 0
+    - git commit -m "Update image tag to ${DOCKER_TAG_COMMIT} [skip ci]" || true
+    - git push origin HEAD:${CI_COMMIT_REF_NAME} || true
+    # Create MR if not present
     - |
-      AUTH_HEADER=$(printf 'PRIVATE-TOKEN%s %s' ':' "${CI_JOB_TOKEN}")
-      EXISTING_MR=$(curl -s -H "${AUTH_HEADER}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests?source_branch=${CI_COMMIT_REF_NAME}&target_branch=${CI_DEFAULT_BRANCH}&state=opened" | jq -r '.[0].iid // empty')
-      
-      if [ -n "$EXISTING_MR" ]; then
-        echo "MR #${EXISTING_MR} already exists. Updating it..."
-        curl -X PUT -H "${AUTH_HEADER}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests/${EXISTING_MR}" -d "title=Update Helm Chart Image Tag ${DOCKER_TAG_COMMIT}" -d "description=Automated update of Helm chart image tag to ${DOCKER_TAG_COMMIT}" 2>/dev/null || echo "Failed to update MR"
+      MR_ID=$(curl -s --header "PRIVATE-TOKEN: ${CI_JOB_TOKEN}" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests?source_branch=${CI_COMMIT_REF_NAME}&target_branch=${CI_DEFAULT_BRANCH}&state=opened" | jq -r '.[0].iid // empty')
+      if [ -z "$MR_ID" ]; then
+        curl -s --header "PRIVATE-TOKEN: ${CI_JOB_TOKEN}" -X POST "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests" \
+          --data "source_branch=${CI_COMMIT_REF_NAME}&target_branch=${CI_DEFAULT_BRANCH}&title=Update Helm Chart Image Tag ${DOCKER_TAG_COMMIT}&remove_source_branch=false"
+        echo "MR created for updating image tag."
       else
-        echo "Creating new MR..."
-        curl -X POST -H "${AUTH_HEADER}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests" -d "source_branch=${CI_COMMIT_REF_NAME}" -d "target_branch=${CI_DEFAULT_BRANCH}" -d "title=Update Helm Chart Image Tag ${DOCKER_TAG_COMMIT}" -d "description=Automated update of Helm chart image tag to ${DOCKER_TAG_COMMIT}" -d "remove_source_branch=false" 2>/dev/null || echo "Failed to create MR"
+        echo "MR already exists (#${MR_ID})."
       fi
-    - echo "Helm chart updated in ${CI_COMMIT_REF_NAME} branch and MR created/updated to ${CI_DEFAULT_BRANCH}"
   only:
     - dev
