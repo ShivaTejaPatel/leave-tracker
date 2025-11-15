@@ -151,26 +151,26 @@ helm-update:
     - git push https://oauth2:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git HEAD:dev || exit 0
     - |
       # Check if MR already exists
-      EXISTING_MR=$(curl -s -H "PRIVATE-TOKEN: ${CI_JOB_TOKEN}" \
+      EXISTING_MR=$(curl -s -H 'PRIVATE-TOKEN: '${CI_JOB_TOKEN} \
         "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests?source_branch=dev&target_branch=main&state=opened" | jq -r '.[0].iid // empty')
       
       if [ -n "$EXISTING_MR" ]; then
         echo "MR #${EXISTING_MR} already exists. Updating it..."
         MR_RESPONSE=$(curl -X PUT \
-          -H "PRIVATE-TOKEN: ${CI_JOB_TOKEN}" \
+          -H 'PRIVATE-TOKEN: '${CI_JOB_TOKEN} \
           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests/${EXISTING_MR}" \
-          -d "title=Update Helm Chart: Image Tag ${DOCKER_TAG_COMMIT}" \
+          -d "title=Update Helm Chart Image Tag ${DOCKER_TAG_COMMIT}" \
           -d "description=Automated update of Helm chart image tag to ${DOCKER_TAG_COMMIT}" \
           2>/dev/null || echo "Failed to update MR")
         echo "Merge request updated: ${MR_RESPONSE}"
       else
         echo "Creating new MR..."
         MR_RESPONSE=$(curl -X POST \
-          -H "PRIVATE-TOKEN: ${CI_JOB_TOKEN}" \
+          -H 'PRIVATE-TOKEN: '${CI_JOB_TOKEN} \
           "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests" \
           -d "source_branch=dev" \
           -d "target_branch=main" \
-          -d "title=Update Helm Chart: Image Tag ${DOCKER_TAG_COMMIT}" \
+          -d "title=Update Helm Chart Image Tag ${DOCKER_TAG_COMMIT}" \
           -d "description=Automated update of Helm chart image tag to ${DOCKER_TAG_COMMIT}" \
           -d "remove_source_branch=false" \
           2>/dev/null || echo "Failed to create MR")
