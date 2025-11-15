@@ -156,16 +156,26 @@ helm-update:
     - git add kubernetes-manifests/helm-chart/values.yaml
     - git commit -m "Update image tag to ${DOCKER_TAG_COMMIT} [skip ci]" || true
     - git push origin HEAD:${CI_COMMIT_REF_NAME} || true
-    # Create MR if not present
+    # Create or update MR
     - |
-      MR_ID=$(curl -s --header "PRIVATE-TOKEN: ${CI_JOB_TOKEN}" \
-        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests?source_branch=${CI_COMMIT_REF_NAME}&target_branch=${CI_DEFAULT_BRANCH}&state=opened" | jq -r '.[0].iid // empty')
-      if [ -z "$MR_ID" ]; then
+      MR_RESPONSE=$(curl -s --header "PRIVATE-TOKEN: ${CI_JOB_TOKEN}" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests?source_branch=${CI_COMMIT_REF_NAME}&target_branch=${CI_DEFAULT_BRANCH}&state=opened")
+      MR_ID=$(echo "$MR_RESPONSE" | jq -r 'if type=="array" and length>0 then .[0].iid else empty end')
+      if [ -z "$MR_ID" ] || [ "$MR_ID" = "null" ]; then
+        echo "Creating new MR..."
         curl -s --header "PRIVATE-TOKEN: ${CI_JOB_TOKEN}" -X POST "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests" \
-          --data "source_branch=${CI_COMMIT_REF_NAME}&target_branch=${CI_DEFAULT_BRANCH}&title=Update Helm Chart Image Tag ${DOCKER_TAG_COMMIT}&remove_source_branch=false"
-        echo "MR created for updating image tag."
+          --data "source_branch=${CI_COMMIT_REF_NAME}" \
+          --data "target_branch=${CI_DEFAULT_BRANCH}" \
+          --data "title=Update Helm Chart Image Tag ${DOCKER_TAG_COMMIT}" \
+          --data "description=Automated update of Helm chart image tag to ${DOCKER_TAG_COMMIT}" \
+          --data "remove_source_branch=false" || echo "Failed to create MR"
+        echo "MR created successfully."
       else
-        echo "MR already exists (#${MR_ID})."
+        echo "MR #${MR_ID} already exists. Updating it..."
+        curl -s --header "PRIVATE-TOKEN: ${CI_JOB_TOKEN}" -X PUT "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests/${MR_ID}" \
+          --data "title=Update Helm Chart Image Tag ${DOCKER_TAG_COMMIT}" \
+          --data "description=Automated update of Helm chart image tag to ${DOCKER_TAG_COMMIT}" || echo "Failed to update MR"
+        echo "MR #${MR_ID} updated successfully."
       fi
   only:
     - dev
