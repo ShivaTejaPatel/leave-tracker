@@ -17,40 +17,6 @@ variables:
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
   GIT_DEPTH: "0"
 
-maven-build:
-  stage: maven-build
-  image: maven:3-eclipse-temurin-17
-  script:
-    - mvn clean package -B -DskipTests
-  artifacts:
-    paths:
-      - target/*.jar
-    expire_in: 1 hour
-  only:
-    - dev
-
-# sonarqube:
-#   stage: sonarqube
-#   image: maven:3-eclipse-temurin-17
-#   dependencies:
-#     - maven-build
-#   needs:
-#     - maven-build
-#   cache:
-#     policy: pull-push
-#     key: "sonar-cache-$CI_COMMIT_REF_SLUG"
-#     paths:
-#       - "${SONAR_USER_HOME}/cache"
-#       - sonar-scanner/
-#   script:
-#     - |
-#       mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-#         -Dsonar.host.url=${SONAR_HOST_URL} \
-#         -Dsonar.login=${SONAR_TOKEN}
-#   allow_failure: true
-#   only:
-#     - dev
-
 docker-build:
   stage: docker-build
   tags: 
@@ -59,51 +25,54 @@ docker-build:
     - maven-build
   needs:
     - maven-build
-#    - sonarqube
   before_script:
-#    - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
     - docker login -u "$DOCKER_HUB_USERNAME" -p "$DOCKER_HUB_PASSWORD"
-
   script:
     - echo "Building Docker image with commit hash tag ${DOCKER_TAG_COMMIT}"
     - docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} .
     - docker tag ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} ${DOCKER_IMAGE}:${DOCKER_TAG_LATEST}
     - echo "Image tagged as ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} and ${DOCKER_IMAGE}:${DOCKER_TAG_LATEST}"
+    # Save image as tarball for Trivy scanning
+    - docker save -o image.tar ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT}
+    - echo "Docker image saved as tarball"
+  artifacts:
+    paths:
+      - image.tar
+    expire_in: 1 hour
   only:
     - dev
+
 
 trivy-scan:
   stage: trivy-scan
   image: 
-    name: aquasec/trivy:canary # It's best practice to use 'name' when nesting
-    entrypoint: [""] # Corrected to lowercase 'entrypoint'
+    name: aquasec/trivy:latest
+    entrypoint: [""]
   dependencies:
     - docker-build
   needs:
     - docker-build
-  # tags: 
-  #   - local
   script:
     - mkdir -p reports
-    - echo "Running Trivy vulnerability scan on ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT}"
+    - echo "Running Trivy vulnerability scan on image tarball"
     - |
       trivy image \
+        --input image.tar \
         --format table \
         --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
         --exit-code 0 \
         --no-progress \
         --scanners vuln \
-        --output reports/trivy-report.txt \
-        ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT}
+        --output reports/trivy-report.txt
     - |
       trivy image \
+        --input image.tar \
         --format json \
         --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
         --exit-code 0 \
         --no-progress \
         --scanners vuln \
-        --output reports/trivy-report.json \
-        ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT}
+        --output reports/trivy-report.json
     - echo "Trivy scan completed successfully"
     - echo "Reports saved to reports/ directory"
   artifacts:
@@ -114,6 +83,7 @@ trivy-scan:
   allow_failure: false
   only:
     - dev
+
 
 
 docker-push:
