@@ -79,8 +79,8 @@ trivy-scan:
     - docker-build
   needs:
     - docker-build
-  tags: 
-    - local
+  # tags: 
+  #   - local
   script:
     - mkdir -p reports
     - echo "Running Trivy vulnerability scan on ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT}"
