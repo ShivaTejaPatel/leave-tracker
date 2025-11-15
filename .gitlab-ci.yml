@@ -63,10 +63,10 @@ docker-build:
   before_script:
     - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
   script:
-    - echo "Building Docker image with commit hash tag: ${DOCKER_TAG_COMMIT}"
+    - echo "Building Docker image with commit hash tag ${DOCKER_TAG_COMMIT}"
     - docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} .
     - docker tag ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} ${DOCKER_IMAGE}:${DOCKER_TAG_LATEST}
-    - echo "Image tagged as: ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} and ${DOCKER_IMAGE}:${DOCKER_TAG_LATEST}"
+    - echo "Image tagged as ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} and ${DOCKER_IMAGE}:${DOCKER_TAG_LATEST}"
   only:
     - dev
 
@@ -123,7 +123,7 @@ docker-push:
   before_script:
     - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
   script:
-    - echo "Pushing Docker image with commit hash tag: ${DOCKER_TAG_COMMIT}"
+    - echo "Pushing Docker image with commit hash tag ${DOCKER_TAG_COMMIT}"
     - docker push ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT}
     - docker push ${DOCKER_IMAGE}:${DOCKER_TAG_LATEST}
     - echo "Successfully pushed ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} and ${DOCKER_IMAGE}:${DOCKER_TAG_LATEST}"
@@ -141,7 +141,7 @@ helm-update:
     - git config --global user.email "gitlab-ci@example.com"
     - git config --global user.name "GitLab CI"
   script:
-    - echo "Updating Helm chart with new image tag: ${DOCKER_TAG_COMMIT}"
+    - echo "Updating Helm chart with new image tag ${DOCKER_TAG_COMMIT}"
     - git fetch origin dev || true
     - git checkout dev || git checkout -b dev
     - git pull origin dev || true
