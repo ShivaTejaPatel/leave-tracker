@@ -2,9 +2,6 @@ package com.example.demo.security;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,12 +19,13 @@ import com.example.demo.entity.Users;
 import com.example.demo.exception.UserNotFound;
 import com.example.demo.payload.Role;
 import com.example.demo.repository.UserRepository;
+
 @Configuration
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-	private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
-	
+    private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
+
     @Autowired
     private UserRepository userRepo;
 
@@ -35,19 +33,19 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         try {
-        	
-        	// Retrieve user details from the database
+
+            // Retrieve user details from the database
             Users employee = userRepo.findByEmail(email).orElseThrow(
-                    () -> new UserNotFound(String.format("User with email %s not found", email))
-            );
-            
+                    () -> new UserNotFound(String.format("User with email %s not found", email)));
+
             logger.info("User details retrieved for email: {}", email);
 
-            // Create a UserDetails object with the user's email, password, and authorities (roles)
+            // Create a UserDetails object with the user's email, password, and authorities
+            // (roles)
             return new User(employee.getEmail(), employee.getPassword(), getAuthorities(employee.getRole()));
-        }catch(Exception e) {
-        	
-        	logger.error("Error loading user details for email: {}", email, e);
+        } catch (Exception e) {
+
+            logger.error("Error loading user details for email: {}", email, e);
             throw e;
         }
     }
@@ -58,4 +56,3 @@ public class CustomUserDetailsService implements UserDetailsService {
         return Collections.singletonList(new SimpleGrantedAuthority(role.getRoleName()));
     }
 }
-

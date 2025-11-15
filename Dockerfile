@@ -1,5 +1,17 @@
-FROM eclipse-temurin:17.0.14_7-jre-ubi9-minimal
+FROM eclipse-temurin:17-jre-ubi9-minimal
+
+
+RUN groupadd -r spring && useradd -r -g spring spring
+
 WORKDIR /app
-COPY target/leave-tracker-0.0.1.jar leave-tracker-0.0.1.jar
+
+
+COPY --chown=spring:spring target/leave-tracker.jar leave-tracker.jar
+
+# Switch to non-root user
+USER spring:spring
+
 EXPOSE 8005
-CMD ["java", "-jar", "leave-tracker-0.0.1.jar"]
+
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar leave-tracker.jar"]

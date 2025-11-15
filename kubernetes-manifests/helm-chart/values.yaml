@@ -1,0 +1,89 @@
+# Default values for leave-tracker
+name: leave-tracker
+namespace: leavetracking
+
+replicaCount: 1
+
+image:
+  repository: shivatejanam854/leave_tracker
+  pullPolicy: Always
+  tag: "latest"
+
+imagePullSecrets: []
+
+service:
+  name: leave-tracker-svc
+  type: ClusterIP
+  port: 8005
+  targetPort: 8005
+
+# Database Configuration (stored in Secret)
+# All values are base64 encoded
+database:
+  # Base64 encoded: jdbc:mysql://host.minikube.internal:3306/leave-tracker-db
+  url: amRiYzpteXNxbDovL2hvc3QubWluaWt1YmUuaW50ZXJuYWw6MzMwNi9sZWF2ZS10cmFja2VyLWRi
+  # Base64 encoded: root
+  username: cm9vdA==
+  # Base64 encoded: Shiv@@12
+  password: U2hpdkBAQjEy
+
+# JVM Options
+javaOpts: ""
+
+# Resources - Guaranteed QoS (requests = limits)
+resources:
+  limits:
+    cpu: 200m
+    memory: 250Mi
+  requests:
+    cpu: 200m
+    memory: 250Mi
+
+# HPA Configuration
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  scalingBehavior:
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+      - type: Pods
+        value: 1
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+
+# Health Probes
+probes:
+  startup:
+    tcpSocket:
+      port: 8005
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 30
+    successThreshold: 1
+  liveness:
+    tcpSocket:
+      port: 8005
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+    successThreshold: 1
+  readiness:
+    httpGet:
+      path: /api/test/areYouInReadyState
+      port: 8005
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+    successThreshold: 1

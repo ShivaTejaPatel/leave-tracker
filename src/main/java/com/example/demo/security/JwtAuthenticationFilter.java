@@ -1,4 +1,5 @@
 package com.example.demo.security;
+
 import java.io.IOException;
 
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -28,7 +30,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     // This method is called for each HTTP request to the application
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(
+            @org.springframework.lang.NonNull HttpServletRequest request,
+            @org.springframework.lang.NonNull HttpServletResponse response,
+            @org.springframework.lang.NonNull FilterChain filterChain)
             throws ServletException, IOException {
         try {
             // Extract JWT token from the request
@@ -42,8 +47,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UserDetails userDetails = customDetailsService.loadUserByUsername(email);
 
                 // Create authentication object and set it in SecurityContext
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 

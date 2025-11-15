@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: leave-tracker-config
-  namespace: leavetracking
-data:
-  SPRING_DATASOURCE_URL: "jdbc:mysql://host.minikube.internal:3306/leave-tracker-db"
-  SPRING_DATASOURCE_USERNAME: "root"
-  SPRING_DATASOURCE_PASSWORD: "Shiv@@12"

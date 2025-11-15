@@ -2,14 +2,10 @@ package com.example.demo.payload;
 
 import java.time.LocalDate;
 
-
-
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 
 @Getter
 @Setter
@@ -21,8 +17,7 @@ public class LeaveApplicationStatusDto {
 	private LocalDate endDate;
 	private String reason;
 	private LeaveStatus status;
-	private  String comment;
+	private String comment;
 	private Long employeeId;
-	
-}
 
+}

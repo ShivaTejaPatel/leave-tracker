@@ -1,0 +1,78 @@
+# Git files
+.git
+.gitignore
+.gitlab-ci.yml
+
+# Documentation
+README.md
+*.md
+HELP.md
+
+# IDE files
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings
+
+# Maven
+.mvn
+mvnw
+mvnw.cmd
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# Build artifacts (keep target/ but exclude unnecessary files)
+target/classes
+target/generated-sources
+target/generated-test-sources
+target/maven-archiver
+target/maven-status
+target/surefire-reports
+target/test-classes
+target/*.class
+target/*.jar.original
+
+# Test files
+src/test
+
+# Kubernetes manifests (not needed in image)
+kubernetes-manifests
+
+# CI/CD files
+.gitlab-ci.yml
+.github
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Docker files (except Dockerfile)
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+

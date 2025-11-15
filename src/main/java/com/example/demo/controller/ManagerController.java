@@ -19,49 +19,43 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.demo.payload.BackendResponse;
 import com.example.demo.payload.LeaveApplicationStatusDto;
 import com.example.demo.payload.LeaveStatusUpdate;
-import com.example.demo.service.EmployeeLeaveApplicationService;
 import com.example.demo.service.ManagerLeaveApplicationService;
 
 @RestController
 @RequestMapping("/manager")
 @PreAuthorize("hasRole('MANAGER')")
 public class ManagerController {
-	
-	private static final Logger logger = LoggerFactory.getLogger(ManagerController.class);
 
-    
-    @Autowired
-    private EmployeeLeaveApplicationService employeeLeaveApplicationService;
-    
+    private static final Logger logger = LoggerFactory.getLogger(ManagerController.class);
+
     @Autowired
     private ManagerLeaveApplicationService managerLeaveApplicationService;
-    
-    
+
     // Api to get all leave applications
-    
 
     @GetMapping("{managerId}/leaves")
     public ResponseEntity<BackendResponse> getAllLeaves(
-            @PathVariable(name="managerId") Long managerId,
-            Authentication authentication){
+            @PathVariable(name = "managerId") Long managerId,
+            Authentication authentication) {
         BackendResponse response = new BackendResponse();
 
         try {
             String loggedMail = authentication.getName();
-            
+
             Long loggedId = managerLeaveApplicationService.getUserIdByEmail(loggedMail);
-            
+
             if (!loggedId.equals(managerId)) {
                 response.setMessage("Unauthorized access");
                 response.setStatus("fail");
                 response.setData("empty");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
-            
+
             logger.info("Fetching all leave applications for managerId: {}", managerId);
-            List<LeaveApplicationStatusDto> allLeaves = managerLeaveApplicationService.getAllLeaveApplications(managerId);
+            List<LeaveApplicationStatusDto> allLeaves = managerLeaveApplicationService
+                    .getAllLeaveApplications(managerId);
             logger.info("Fetched {} leave applications successfully", allLeaves.size());
-            
+
             response.setMessage("Leave applications fetched successfully");
             response.setStatus("success");
             response.setData(allLeaves);
@@ -76,39 +70,38 @@ public class ManagerController {
         }
     }
 
-    
-    // Api to get a specific leave application for an employee 
-    
-    
+    // Api to get a specific leave application for an employee
+
     @GetMapping("{managerId}/leaves/{employeeId}/leave/{leaveId}")
     public ResponseEntity<BackendResponse> getLeave(
-            @PathVariable(name="managerId") Long managerId,
-            @PathVariable(name="employeeId") Long employeeId,
-            @PathVariable(name="leaveId") Long leaveId,
-            Authentication authentication){
+            @PathVariable(name = "managerId") Long managerId,
+            @PathVariable(name = "employeeId") Long employeeId,
+            @PathVariable(name = "leaveId") Long leaveId,
+            Authentication authentication) {
         BackendResponse response = new BackendResponse();
 
         try {
             String loggedMail = authentication.getName();
-            
+
             Long loggedId = managerLeaveApplicationService.getUserIdByEmail(loggedMail);
-            
+
             if (!loggedId.equals(managerId)) {
                 response.setMessage("Unauthorized access");
                 response.setStatus("fail");
                 response.setData("empty");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
-           
-            logger.info("Fetching leave application with id {} for managerId: {} and employeeId: {}", leaveId, managerId, employeeId);
-            
-            LeaveApplicationStatusDto leave = managerLeaveApplicationService.getLeaveApplicationById(managerId, employeeId, leaveId);
-            
-           
+
+            logger.info("Fetching leave application with id {} for managerId: {} and employeeId: {}", leaveId,
+                    managerId, employeeId);
+
+            LeaveApplicationStatusDto leave = managerLeaveApplicationService.getLeaveApplicationById(managerId,
+                    employeeId, leaveId);
+
             response.setMessage("Leave application fetched successfully");
             response.setStatus("success");
             response.setData(leave);
-            
+
             logger.info("Fetched leave application successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -120,42 +113,39 @@ public class ManagerController {
         }
     }
 
-    
-    
- 
     // Api to approve/reject leave for an employee
-    
+
     @PutMapping("{managerId}/leaves/{employeeId}/checkLeave/{leaveId}")
     public ResponseEntity<BackendResponse> approveLeave(
-            @PathVariable(name="managerId") Long managerId,
-            @PathVariable(name="employeeId") Long employeeId,
-            @PathVariable(name="leaveId") Long leaveId,
+            @PathVariable(name = "managerId") Long managerId,
+            @PathVariable(name = "employeeId") Long employeeId,
+            @PathVariable(name = "leaveId") Long leaveId,
             @RequestBody LeaveStatusUpdate leaveStatusUpdate,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         BackendResponse response = new BackendResponse();
 
         try {
             String loggedMail = authentication.getName();
-            
+
             Long loggedId = managerLeaveApplicationService.getUserIdByEmail(loggedMail);
-            
+
             if (!loggedId.equals(managerId)) {
                 response.setMessage("Unauthorized access");
                 response.setStatus("fail");
                 response.setData("empty");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
-           
-            logger.info("Approving leave application with id {} for managerId: {} and employeeId: {}", leaveId, managerId, employeeId);
-            
-            LeaveApplicationStatusDto approvedLeave = managerLeaveApplicationService.updateLeaveApplication(managerId, employeeId, leaveId, leaveStatusUpdate);
-            
-           
+
+            logger.info("Approving leave application with id {} for managerId: {} and employeeId: {}", leaveId,
+                    managerId, employeeId);
+
+            LeaveApplicationStatusDto approvedLeave = managerLeaveApplicationService.updateLeaveApplication(managerId,
+                    employeeId, leaveId, leaveStatusUpdate);
+
             response.setMessage("Leave application approved successfully");
             response.setStatus("success");
             response.setData(approvedLeave);
-            
+
             logger.info("Leave application approved successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -167,7 +157,4 @@ public class ManagerController {
         }
     }
 
-    
-
-    
 }

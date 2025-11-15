@@ -1,8 +1,6 @@
 
 package com.example.demo.securityconfig;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +19,6 @@ import com.example.demo.security.JwtAuthenticationFilter;
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -37,6 +34,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/test/**").permitAll()
                 .requestMatchers("/actuator/prometheus").permitAll()
                 .requestMatchers("/employee").hasRole("EMPLOYEE")
                 .requestMatchers("/manager").hasRole("MANAGER")

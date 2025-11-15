@@ -1,41 +1,182 @@
 stages:
   - maven-build
+  - sonarqube
   - docker-build
+  - trivy-scan
   - docker-push
+  - helm-update
+
 cache:
   paths:
     - .m2/repository
 
+variables:
+  DOCKER_IMAGE: ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}
+  DOCKER_TAG_COMMIT: ${CI_COMMIT_SHORT_SHA}
+  DOCKER_TAG_LATEST: latest
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  GIT_DEPTH: "0"
+
 maven-build:
   stage: maven-build
-  image: maven:latest
+  image: maven:4.0.0-rc-5-sapmachine-25
   script:
     - mvn clean package -B -DskipTests
   artifacts:
     paths:
       - target/*.jar
     expire_in: 1 hour
+  only:
+    - dev
+
+sonarqube:
+  stage: sonarqube
+  image: maven:3-eclipse-temurin-17
+  dependencies:
+    - maven-build
+  needs:
+    - maven-build
+  cache:
+    policy: pull-push
+    key: "sonar-cache-$CI_COMMIT_REF_SLUG"
+    paths:
+      - "${SONAR_USER_HOME}/cache"
+      - sonar-scanner/
+  script:
+    - |
+      mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+        -Dsonar.host.url=${SONAR_HOST_URL} \
+        -Dsonar.login=${SONAR_TOKEN}
+  allow_failure: true
+  only:
+    - dev
 
 docker-build:
   stage: docker-build
   tags: 
     - local
+  dependencies:
+    - maven-build
+  needs:
+    - maven-build
+    - sonarqube
   before_script:
     - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
   script:
-    - docker build -t ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:latest .
-   # - docker tag ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:${CI_COMMIT_SHA} ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:latest
+    - echo "Building Docker image with commit hash tag: ${DOCKER_TAG_COMMIT}"
+    - docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} .
+    - docker tag ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} ${DOCKER_IMAGE}:${DOCKER_TAG_LATEST}
+    - echo "Image tagged as: ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} and ${DOCKER_IMAGE}:${DOCKER_TAG_LATEST}"
   only:
-    - main
+    - dev
+
+trivy-scan:
+  stage: trivy-scan
+  image: 
+    name: aquasec/trivy:canary
+  dependencies:
+    - docker-build
+  needs:
+    - docker-build
+  tags: 
+    - local
+  script:
+    - mkdir -p reports
+    - echo "Running Trivy vulnerability scan on ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT}"
+    - |
+      trivy image \
+        --format table \
+        --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+        --exit-code 0 \
+        --no-progress \
+        --scanners vuln \
+        --output reports/trivy-report.txt \
+        ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT}
+    - |
+      trivy image \
+        --format json \
+        --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+        --exit-code 0 \
+        --no-progress \
+        --scanners vuln \
+        --output reports/trivy-report.json \
+        ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT}
+    - echo "Trivy scan completed successfully"
+    - echo "Reports saved to reports/ directory"
+  artifacts:
+    paths:
+      - reports/
+    expire_in: 1 hour
+    when: always
+  allow_failure: false
+  only:
+    - dev
 
 docker-push:
   stage: docker-push
   tags: 
     - local
+  dependencies:
+    - docker-build
+  needs:
+    - docker-build
+    - trivy-scan
   before_script:
     - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
   script:
-    #- docker push ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:${CI_COMMIT_SHA}
-    - docker push ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:latest
+    - echo "Pushing Docker image with commit hash tag: ${DOCKER_TAG_COMMIT}"
+    - docker push ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT}
+    - docker push ${DOCKER_IMAGE}:${DOCKER_TAG_LATEST}
+    - echo "Successfully pushed ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} and ${DOCKER_IMAGE}:${DOCKER_TAG_LATEST}"
   only:
-    - main
+    - dev
+
+helm-update:
+  stage: helm-update
+  image: alpine/git:latest
+  dependencies: []
+  needs:
+    - docker-push
+  before_script:
+    - apk add --no-cache yq curl jq
+    - git config --global user.email "gitlab-ci@example.com"
+    - git config --global user.name "GitLab CI"
+  script:
+    - echo "Updating Helm chart with new image tag: ${DOCKER_TAG_COMMIT}"
+    - git fetch origin dev || true
+    - git checkout dev || git checkout -b dev
+    - git pull origin dev || true
+    - yq eval ".image.tag = \"${DOCKER_TAG_COMMIT}\"" -i kubernetes-manifests/helm-chart/values.yaml
+    - git add kubernetes-manifests/helm-chart/values.yaml
+    - git commit -m "chore: update helm chart image tag to ${DOCKER_TAG_COMMIT} [skip ci]" || exit 0
+    - git push https://oauth2:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git HEAD:dev || exit 0
+    - |
+      # Check if MR already exists
+      EXISTING_MR=$(curl -s -H "PRIVATE-TOKEN: ${CI_JOB_TOKEN}" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests?source_branch=dev&target_branch=main&state=opened" | jq -r '.[0].iid // empty')
+      
+      if [ -n "$EXISTING_MR" ]; then
+        echo "MR #${EXISTING_MR} already exists. Updating it..."
+        MR_RESPONSE=$(curl -X PUT \
+          -H "PRIVATE-TOKEN: ${CI_JOB_TOKEN}" \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests/${EXISTING_MR}" \
+          -d "title=Update Helm Chart: Image Tag ${DOCKER_TAG_COMMIT}" \
+          -d "description=Automated update of Helm chart image tag to ${DOCKER_TAG_COMMIT}" \
+          2>/dev/null || echo "Failed to update MR")
+        echo "Merge request updated: ${MR_RESPONSE}"
+      else
+        echo "Creating new MR..."
+        MR_RESPONSE=$(curl -X POST \
+          -H "PRIVATE-TOKEN: ${CI_JOB_TOKEN}" \
+          "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/merge_requests" \
+          -d "source_branch=dev" \
+          -d "target_branch=main" \
+          -d "title=Update Helm Chart: Image Tag ${DOCKER_TAG_COMMIT}" \
+          -d "description=Automated update of Helm chart image tag to ${DOCKER_TAG_COMMIT}" \
+          -d "remove_source_branch=false" \
+          2>/dev/null || echo "Failed to create MR")
+        echo "Merge request created: ${MR_RESPONSE}"
+      fi
+    - echo "Helm chart updated in dev branch and MR created/updated to main"
+  only:
+    - dev

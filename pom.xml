@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.1</version>
+		<version>3.3.13</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
@@ -28,6 +28,9 @@
 	</scm>
 	<properties>
 		<java.version>17</java.version>
+		<sonar.projectKey>leave-tracker1_leave-tracker_a572f46d-d68c-4d9e-9625-d6d6b0a5a615</sonar.projectKey>
+		<sonar.projectName>leave-tracker</sonar.projectName>
+		<sonar.qualitygate.wait>true</sonar.qualitygate.wait>
 	</properties>
 	<dependencies>
 
@@ -108,7 +111,7 @@
 	</dependencies>
 
 	<build>
-	<finalName>leave-tracker-0.0.1</finalName>
+	<finalName>leave-tracker</finalName>
 		<plugins>
 		<plugin>
             <groupId>org.apache.maven.plugins</groupId>
@@ -122,6 +125,11 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>3.11.0.3922</version>
 			</plugin>
 		</plugins>
 	</build>
