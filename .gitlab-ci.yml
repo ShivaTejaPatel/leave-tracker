@@ -61,7 +61,9 @@ docker-build:
     - maven-build
 #    - sonarqube
   before_script:
-    - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
+#    - echo ${DOCKER_HUB_PASSWORD} | docker login -u ${DOCKER_HUB_USERNAME} --password-stdin
+    - docker login -u "$DOCKER_HUB_USERNAME" -p "$DOCKER_HUB_PASSWORD"
+
   script:
     - echo "Building Docker image with commit hash tag ${DOCKER_TAG_COMMIT}"
     - docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG_COMMIT} .
