@@ -1,22 +1,17 @@
 # Default values for leave-tracker
 name: leave-tracker
 namespace: leavetracking
-
 replicaCount: 1
-
 image:
   repository: shivatejanam854/leave_tracker
   pullPolicy: Always
-  tag: "latest"
-
+  tag: "35d65047"
 imagePullSecrets: []
-
 service:
   name: leave-tracker-svc
   type: ClusterIP
   port: 8005
   targetPort: 8005
-
 # Database Configuration (stored in Secret)
 # All values are base64 encoded
 database:
@@ -26,10 +21,8 @@ database:
   username: cm9vdA==
   # Base64 encoded: Shiv@@12
   password: U2hpdkBAQjEy
-
 # JVM Options
 javaOpts: ""
-
 # Resources - Guaranteed QoS (requests = limits)
 resources:
   limits:
@@ -38,7 +31,6 @@ resources:
   requests:
     cpu: 200m
     memory: 250Mi
-
 # HPA Configuration
 hpa:
   enabled: true
@@ -50,16 +42,15 @@ hpa:
     scaleUp:
       stabilizationWindowSeconds: 0
       policies:
-      - type: Pods
-        value: 1
-        periodSeconds: 15
+        - type: Pods
+          value: 1
+          periodSeconds: 15
     scaleDown:
       stabilizationWindowSeconds: 300
       policies:
-      - type: Pods
-        value: 1
-        periodSeconds: 60
-
+        - type: Pods
+          value: 1
+          periodSeconds: 60
 # Health Probes
 probes:
   startup:
