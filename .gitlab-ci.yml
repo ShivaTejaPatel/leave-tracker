@@ -151,7 +151,7 @@ helm-update:
     - git config --global user.email "gitlab-ci@example.com"
     - git config --global user.name "GitLab CI"
   script:
-    - git remote set-url origin "https://oauth2:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+    - git remote set-url origin "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
     - yq eval ".image.tag = \"${DOCKER_TAG_COMMIT}\"" -i kubernetes-manifests/helm-chart/values.yaml
     - git add kubernetes-manifests/helm-chart/values.yaml
     - git commit -m "Update image tag to ${DOCKER_TAG_COMMIT} [skip ci]" || true
