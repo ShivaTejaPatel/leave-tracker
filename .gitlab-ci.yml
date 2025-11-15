@@ -17,6 +17,40 @@ variables:
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
   GIT_DEPTH: "0"
 
+maven-build:
+  stage: maven-build
+  image: maven:3-eclipse-temurin-17
+  script:
+    - mvn clean package -B -DskipTests
+  artifacts:
+    paths:
+      - target/*.jar
+    expire_in: 1 hour
+  only:
+    - dev
+
+# sonarqube:
+#   stage: sonarqube
+#   image: maven:3-eclipse-temurin-17
+#   dependencies:
+#     - maven-build
+#   needs:
+#     - maven-build
+#   cache:
+#     policy: pull-push
+#     key: "sonar-cache-$CI_COMMIT_REF_SLUG"
+#     paths:
+#       - "${SONAR_USER_HOME}/cache"
+#       - sonar-scanner/
+#   script:
+#     - |
+#       mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+#         -Dsonar.host.url=${SONAR_HOST_URL} \
+#         -Dsonar.login=${SONAR_TOKEN}
+#   allow_failure: true
+#   only:
+#     - dev
+
 docker-build:
   stage: docker-build
   tags: 
@@ -83,7 +117,6 @@ trivy-scan:
   allow_failure: false
   only:
     - dev
-
 
 
 docker-push:
