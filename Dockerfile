@@ -1,6 +1,5 @@
 FROM eclipse-temurin:17-jre-ubi9-minimal
 
-
 RUN groupadd -r spring && useradd -r -g spring spring
 
 WORKDIR /app
